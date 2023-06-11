@@ -1,0 +1,60 @@
+{
+  description = "A flake for papers written in LaTeX";
+
+  inputs.nixpkgs.url = "github:nixos/nixpkgs/release-23.05";
+  inputs.flake-utils.url = "github:numtide/flake-utils";
+
+  outputs = { self, nixpkgs, flake-utils }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+        tex = (pkgs.texlive.combine {
+          inherit (pkgs.texlive)
+            scheme-full latex-bin latexmk adjustbox beamer
+            beamertheme-metropolis pgfopts fontspec thmtools braket quantikz
+            xargs xstring environ tikz-cd tabto-ltx tikzmark collection-latex
+            biblatex tikz-3dplot psnfss babel siunitx physics pgfplots mathtools
+            tikzsymbols xkeyval collectbox collection-mathscience float qrcode;
+        });
+        # Build derivation for latex documents
+        # From https://flyx.org/nix-flakes-latex/
+        # The output directory mirrors the input one but with pdf files
+        latexBuildDerivation =
+          ({ nativeBuildInputs ? [ ], texDir ? "./.", texFile }:
+            pkgs.stdenvNoCC.mkDerivation {
+              name = "latex-${texFile}";
+              src = self;
+              allowSubstitutes = false;
+              buildInputs =
+                [ pkgs.coreutils tex pkgs.asymptote pkgs.ghostscript ];
+              nativeBuildInputs = nativeBuildInputs;
+              phases = [ "unpackPhase" "buildPhase" "installPhase" ];
+              buildPhase = ''
+                # export PATH="${pkgs.lib.makeBinPath nativeBuildInputs}";
+                mkdir -p .cache/texmf-var
+                mkdir -p .asy
+                ${ # Copy everything in the inputs to the build directory, preserving the directory structure
+                if nativeBuildInputs == [ ] then
+                  ""
+                else
+                  "cp -r ${
+                    builtins.toString (map (s: s + "/*") nativeBuildInputs)
+                  } ."}
+                cd ${texDir}
+                env TEXMFHOME=.cache TEXMFVAR=.cache/texmf-var \
+                  ASYMPTOTE_HOME=.asy \
+                  SOURCE_DATE_EPOCH=${toString self.lastModified} \
+                  latexmk -interaction=nonstopmode -pdf -lualatex \
+                  -pretex="\pdfvariable suppressoptionalinfo 512\relax" \
+                  -usepretex ${texFile}.tex
+              '';
+              installPhase = ''
+                mkdir -p $out/${texDir}
+                cp ${texFile}.pdf $out/${texDir}
+              '';
+            });
+      in {
+        lib = { inherit latexBuildDerivation; };
+        formatter = pkgs.nixfmt;
+      });
+}
