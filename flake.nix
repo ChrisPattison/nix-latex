@@ -20,17 +20,18 @@
         # From https://flyx.org/nix-flakes-latex/
         # The output directory mirrors the input one but with pdf files
         latexBuildDerivation =
-          ({ nativeBuildInputs ? [ ], texDir ? "./.", texFile }:
+          ({ src, nativeBuildInputs ? [ ], texDir ? "./.", texFile }:
+            let buildInputs = [ pkgs.coreutils tex pkgs.asymptote pkgs.ghostscript ]; in
             pkgs.stdenvNoCC.mkDerivation {
               name = "latex-${texFile}";
-              src = self;
+              src = src;
               allowSubstitutes = false;
               buildInputs =
-                [ pkgs.coreutils tex pkgs.asymptote pkgs.ghostscript ];
+                buildInputs;
               nativeBuildInputs = nativeBuildInputs;
               phases = [ "unpackPhase" "buildPhase" "installPhase" ];
               buildPhase = ''
-                # export PATH="${pkgs.lib.makeBinPath nativeBuildInputs}";
+                export PATH="${pkgs.lib.makeBinPath buildInputs}";
                 mkdir -p .cache/texmf-var
                 mkdir -p .asy
                 ${ # Copy everything in the inputs to the build directory, preserving the directory structure
