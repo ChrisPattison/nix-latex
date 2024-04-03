@@ -7,7 +7,13 @@
   outputs = { self, nixpkgs, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        pkgs = nixpkgs.legacyPackages.${system};
+        pkg_overlays = import ./overlays;
+        pkgs = nixpkgs.legacyPackages.${system}.extend pkg_overlays.python;
+
+        py = pkgs.python3.withPackages (ps: [
+          ps.arxiv-latex-cleaner
+        ]);
+
         tex = (pkgs.texlive.combine {
           inherit (pkgs.texlive)
             scheme-full latex-bin latexmk adjustbox beamer
@@ -16,6 +22,7 @@
             biblatex tikz-3dplot psnfss babel siunitx physics pgfplots mathtools
             tikzsymbols xkeyval collectbox collection-mathscience float qrcode;
         });
+
         # Build derivation for latex documents
         # From https://flyx.org/nix-flakes-latex/
         # The output directory mirrors the input one but with pdf files
@@ -54,8 +61,28 @@
                 cp ${texFile}.pdf $out/${texDir}
               '';
             });
+
+        arxivCleanerBuildDerivation = ({ name ? "arxiv", src, texDir ? "./.", cleanerArgs ? ""}:
+          pkgs.stdenvNoCC.mkDerivation rec {
+            inherit src;
+            inherit name;
+            phases = [ "unpackPhase" "buildPhase" "installPhase" ];
+            nativeBuildInputs = [ py ];
+            buildPhase = ''
+              cd ..
+              mkdir clean
+              cp -r $sourceRoot/${texDir} clean
+              python3 -m arxiv_latex_cleaner clean ${cleanerArgs}
+            '';
+            installPhase = ''
+              cp -r clean_arXiv $out/
+            '';
+          });
       in {
-        lib = { inherit latexBuildDerivation; };
+        lib = {
+          inherit latexBuildDerivation;
+          inherit arxivCleanerBuildDerivation;
+        };
         formatter = pkgs.nixfmt;
       });
 }
