@@ -27,8 +27,11 @@
         # From https://flyx.org/nix-flakes-latex/
         # The output directory mirrors the input one but with pdf files
         latexBuildDerivation =
-          ({ src, nativeBuildInputs ? [ ], texDir ? "./.", texFile }:
-            let buildInputs = [ pkgs.coreutils tex pkgs.asymptote pkgs.ghostscript ]; in
+          ({ src, nativeBuildInputs ? [ ], texDir ? "./.", texFile, copyOutputs ? [ ] }:
+            let
+              buildInputs = [ pkgs.coreutils tex pkgs.asymptote pkgs.ghostscript ];
+              copyOutputsList = builtins.concatStringsSep " " copyOutputs;
+            in
             pkgs.stdenvNoCC.mkDerivation {
               name = "latex-${texFile}";
               src = src;
@@ -58,7 +61,7 @@
               '';
               installPhase = ''
                 mkdir -p $out/${texDir}
-                cp ${texFile}.pdf $out/${texDir}
+                cp ${texFile}.pdf ${copyOutputsList} $out/${texDir}
               '';
             });
 
