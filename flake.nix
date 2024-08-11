@@ -56,7 +56,7 @@
                   ASYMPTOTE_HOME=.asy \
                   SOURCE_DATE_EPOCH=${toString self.lastModified} \
                   latexmk -interaction=nonstopmode -pdf -pdflatex \
-                  -pretex="\pdfvariable suppressoptionalinfo 512\relax" \
+                  -pretex="\pdfinfoomitdate1 \pdfsuppressptexinfo-1 \pdftrailerid{}" \
                   -usepretex ${texFile}.tex
               '';
               installPhase = ''
