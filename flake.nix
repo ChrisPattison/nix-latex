@@ -1,7 +1,7 @@
 {
   description = "A flake for papers written in LaTeX";
 
-  inputs.nixpkgs.url = "github:nixos/nixpkgs/release-23.05";
+  inputs.nixpkgs.url = "github:nixos/nixpkgs/release-24.05";
   inputs.flake-utils.url = "github:numtide/flake-utils";
 
   outputs = { self, nixpkgs, flake-utils }:
@@ -55,7 +55,7 @@
                 env TEXMFHOME=.cache TEXMFVAR=.cache/texmf-var \
                   ASYMPTOTE_HOME=.asy \
                   SOURCE_DATE_EPOCH=${toString self.lastModified} \
-                  latexmk -interaction=nonstopmode -pdf -lualatex \
+                  latexmk -interaction=nonstopmode -pdf -pdflatex \
                   -pretex="\pdfvariable suppressoptionalinfo 512\relax" \
                   -usepretex ${texFile}.tex
               '';
