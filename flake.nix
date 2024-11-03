@@ -20,7 +20,7 @@
             beamertheme-metropolis pgfopts fontspec thmtools braket quantikz
             xargs xstring environ tikz-cd tabto-ltx tikzmark collection-latex
             biblatex tikz-3dplot psnfss babel siunitx physics pgfplots mathtools
-            tikzsymbols xkeyval collectbox collection-mathscience float qrcode;
+            tikzsymbols xkeyval collectbox collection-mathscience float qrcode dot2texi;
         });
 
         # Build derivation for latex documents
@@ -29,7 +29,7 @@
         latexBuildDerivation =
           ({ src, nativeBuildInputs ? [ ], texDir ? "./.", texFile, copyOutputs ? [ ] }:
             let
-              buildInputs = [ pkgs.coreutils tex pkgs.asymptote pkgs.ghostscript ];
+              buildInputs = [ pkgs.coreutils tex pkgs.asymptote pkgs.ghostscript pkgs.dot2tex ];
               copyOutputsList = builtins.concatStringsSep " " copyOutputs;
             in
             pkgs.stdenvNoCC.mkDerivation {
