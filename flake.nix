@@ -1,7 +1,7 @@
 {
   description = "A flake for papers written in LaTeX";
 
-  inputs.nixpkgs.url = "github:nixos/nixpkgs/release-24.11";
+  inputs.nixpkgs.url = "github:nixos/nixpkgs/release-25.05";
   inputs.flake-utils.url = "github:numtide/flake-utils";
 
   outputs = { self, nixpkgs, flake-utils }:
@@ -85,6 +85,7 @@
         lib = {
           inherit latexBuildDerivation;
           inherit arxivCleanerBuildDerivation;
+          inherit tex;
         };
         formatter = pkgs.nixfmt;
       });
